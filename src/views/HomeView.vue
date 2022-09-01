@@ -30,15 +30,22 @@
       </div>
     </div>
 
+    <div>
+      <HomeInvoiceVue v-for="(row, i) in invoiceData" :invoice="row" :key="i"/>
+    </div>
+
   </div>
 </template>
 
 <script>
-import { mapMutations } from 'vuex';
+import HomeInvoiceVue from '@/components/HomeInvoice.vue';
+import { mapMutations, mapState } from 'vuex';
 
 export default {
   name: 'HomeView',
-  components: {},
+  components: {
+    HomeInvoiceVue
+  },
   data() {
     return {
       filterMenu: false
@@ -54,7 +61,10 @@ export default {
     showFilterMenu() {
       this.filterMenu = !this.filterMenu
     }
-  }
+  },
+  computed: {
+    ...mapState(['invoiceData'])
+  },
 }
 </script>
 
