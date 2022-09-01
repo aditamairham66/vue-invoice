@@ -1,8 +1,9 @@
 <template>
-  <div>
+  <div v-if="invoiceLoading">
     <div v-if="!mobile" class="app flex flex-column">
       <Navigation/>
       <div class="app-content flex flex-column">
+        <ModalConfirmAlertVue v-if="modalConfirmAlert"/>
 
         <transition name="invoice">
           <ModalInvoiceVue v-if="modalInvoice"/>
@@ -22,12 +23,14 @@
 <script>
 import Navigation from './components/Navigation.vue';
 import ModalInvoiceVue from './components/ModalInvoice.vue';
-import { mapState } from 'vuex';
+import ModalConfirmAlertVue from './components/ModalConfirmAlert.vue';
+import { mapActions, mapState } from 'vuex';
 
 export default {
   components: {
     Navigation,
-    ModalInvoiceVue
+    ModalInvoiceVue,
+    ModalConfirmAlertVue
   },
   data() {
     return {
@@ -35,10 +38,16 @@ export default {
     }
   },
   created() {
+    // get data invoice
+    this.actionGetInvoiceAll()
+
+    // check device mobile
     this.checkIsMobile()
     window.addEventListener("resize", this.checkIsMobile())
   },
   methods: {
+    ...mapActions(['actionGetInvoiceAll']),
+
     checkIsMobile() {
       const windowLength = window.innerWidth
       if (windowLength <= 750) {
@@ -49,7 +58,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(['modalInvoice'])
+    ...mapState(['modalInvoice', 'modalConfirmAlert', 'invoiceLoading'])
   }
 }
 </script>

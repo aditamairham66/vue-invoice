@@ -1,6 +1,8 @@
 <template>
     <div @click="checkClick" class="invoice-wrap flex flex-column" ref="modalInvoiceRef">
         <form @submit.prevent="submitForm" class="invoice-content">
+            <LoadingVue v-show="loading"/>
+
             <h1>New Invoice</h1>
 
             <div class="bill-from flex flex-column">
@@ -161,9 +163,13 @@ import { mapMutations } from 'vuex';
 import { uid } from 'uid';
 import { db } from "@/firebase/firebaseSetting";
 import { addDoc, collection } from '@firebase/firestore';
+import LoadingVue from './Loading.vue';
 
 export default {
     name: 'modalInvoice',
+    components: {
+        LoadingVue
+    },
     data() {
         return {
             OptionDate: {
@@ -171,6 +177,7 @@ export default {
                 month: 'short',
                 day: 'numeric'
             },
+            loading: null,
             billerStreetAddress: null,
             billerCity: null,
             billerZipCode: null,
@@ -194,11 +201,11 @@ export default {
         }
     },
     methods: {
-        ...mapMutations(['mutationShowModalInvoice']),
+        ...mapMutations(['mutationShowModalInvoice', 'mutationShowModalConfirmAlert']),
 
         checkClick(e) {
             if (e.target === this.$refs.modalInvoiceRef) {
-                this.mutationShowModalInvoice();
+                this.mutationShowModalConfirmAlert();
             }
         },
 
@@ -241,6 +248,10 @@ export default {
                 return
             }
 
+            // show loading
+            this.loading = true
+
+            // sum total price product
             this.sumTotalAll()
 
             await addDoc(
@@ -269,6 +280,9 @@ export default {
                     invoiceTotal: this.invoiceTotal,
                 }
             )
+
+            // hide loading
+            this.loading = false
 
             this.mutationShowModalInvoice()
         },
