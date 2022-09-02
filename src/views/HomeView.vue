@@ -4,19 +4,21 @@
     <div class="header flex">
       <div class="left flex flex-column">
         <h1>Invoices</h1>
-        <span>There is 4 invoice</span>
+        <span>There is {{ invoiceData.length }} invoice</span>
       </div>
       <div class="right flex">
         
         <div class="filter flex" @click="showFilterMenu">
-          <span>Filter By Status</span>
+          <span>
+            Filter By Status <span v-if="filterStatus">: {{ filterStatus }}</span>
+          </span>
           <img src="@/assets/icon-arrow-down.svg" alt="">
 
           <ul v-show="filterMenu" class="filter-menu">
-            <li>Draft</li>
-            <li>Pending</li>
-            <li>Paid</li>
-            <li>CLear Filter</li>
+            <li @click="filterByStatus">Draft</li>
+            <li @click="filterByStatus">Pending</li>
+            <li @click="filterByStatus">Paid</li>
+            <li @click="filterByStatus">CLear Filter</li>
           </ul>
         </div>
 
@@ -31,7 +33,7 @@
     </div>
 
     <div v-if="invoiceData.length > 0">
-      <HomeInvoiceVue v-for="(row, i) in invoiceData" :invoice="row" :key="i"/>
+      <HomeInvoiceVue v-for="(row, i) in filterData" :invoice="row" :key="i"/>
     </div>
 
     <div v-else class="empty flex flex-column ">
@@ -54,7 +56,8 @@ export default {
   },
   data() {
     return {
-      filterMenu: false
+      filterMenu: false,
+      filterStatus: null
     }
   },
   methods: {
@@ -66,10 +69,35 @@ export default {
 
     showFilterMenu() {
       this.filterMenu = !this.filterMenu
-    }
+    },
+
+    filterByStatus(e) {
+      if (e.target.innerText === "CLear Filter") {
+        this.filterStatus = null
+        return
+      }
+
+      this.filterStatus = e.target.innerText
+    },
+
   },
   computed: {
-    ...mapState(['invoiceData'])
+    ...mapState(['invoiceData']),
+
+    filterData() {
+      return this.invoiceData.filter(row => {
+        if (this.filterStatus == "Draft") {
+          return row.invoiceDraft === true
+        }
+        if (this.filterStatus == "Pending") {
+          return row.invoicePending === true
+        }
+        if (this.filterStatus == "Paid") {
+          return row.invoicePaid === true
+        }
+        return row
+      })
+    }
   },
 }
 </script>

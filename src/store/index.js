@@ -1,6 +1,6 @@
 import { createStore } from 'vuex'
 import { db } from "@/firebase/firebaseSetting";
-import { collection, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
+import { collection, deleteDoc, doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import createPersistedState from "vuex-persistedstate";
 
 export default createStore({
@@ -48,6 +48,25 @@ export default createStore({
 
     mutationDeleteInvoice(state, payload) {
       state.invoiceData = state.invoiceData.filter(row => row.docId !== payload)
+    },
+
+    mutationUpdateToPaid(state, payload) {
+      state.invoiceData.forEach(row => {
+        if (row.docId === payload) {
+          row.invoicePaid = true
+          row.invoicePending = false
+        }
+      })
+    },
+
+    mutationUpdateToPending(state, payload) {
+      state.invoiceData.forEach(row => {
+        if (row.docId === payload) {
+          row.invoicePaid = false
+          row.invoicePending = true
+          row.invoiceDraft = false
+        }
+      })
     },
     
   },
@@ -107,6 +126,30 @@ export default createStore({
       )
 
       commit('mutationDeleteInvoice', docId)
+    },
+
+    async actionUpdateToPaid({commit}, {docId}) {
+      await updateDoc(
+        doc(db, 'invoices', docId), {
+          invoicePaid: true,
+          invoicePending: false,
+          invoiceDraft: false,
+        }
+      )
+
+      commit('mutationUpdateToPaid', docId)
+    },
+
+    async actionUpdateToPending({commit}, {docId}) {
+      await updateDoc(
+        doc(db, 'invoices', docId), {
+          invoicePaid: false,
+          invoicePending: true,
+          invoiceDraft: false,
+        }
+      )
+
+      commit('mutationUpdateToPending', docId)
     },
 
   },

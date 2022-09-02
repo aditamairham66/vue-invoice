@@ -17,8 +17,10 @@
       <div class="right flex">
         <button class="dark-purple" @click="updateInvoice">Edit</button>
         <button class="red" @click="deleteInvoice(detail.docId)">Delete</button>
-        <button class="green" v-if="detail.invoicePending">Mark as Paid</button>
-        <button class="orange" v-if="detail.invoiceDraft || detail.invoicePaid">Mark as Pending</button>
+        <button class="green" @click="updateToPaid(detail.docId)" 
+          v-if="detail.invoicePending">Mark as Paid</button>
+        <button class="orange" @click="updateToPending(detail.docId)" 
+          v-if="detail.invoiceDraft || detail.invoicePaid">Mark as Pending</button>
       </div>
     </div>
 
@@ -103,7 +105,7 @@ export default {
   methods: {
     ...mapMutations(['mutationSetInvoiceArray', 'mutationSetEditInvoice', 'mutationShowModalInvoice']),
 
-    ...mapActions(['actionDeleteInvoice']),
+    ...mapActions(['actionDeleteInvoice', 'actionUpdateToPaid', 'actionUpdateToPending']),
 
     getInvoiceId() {
       this.mutationSetInvoiceArray(this.$route.params.invoiceId)
@@ -120,6 +122,18 @@ export default {
         docId: docId
       })
       this.$router.push({ name: 'home' })
+    },
+
+    async updateToPaid(docId) {
+      await this.actionUpdateToPaid({
+        docId: docId
+      })
+    },
+
+    async updateToPending(docId) {
+      await this.actionUpdateToPending({
+        docId: docId
+      })
     },
 
   },
