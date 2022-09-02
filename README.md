@@ -22,3 +22,13 @@ npm run lint
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
+
+### TEXH STACK
+- Vue 3
+- Vuex
+- Firebase 9
+
+### LINK SERVER
+```bash
+https://vue-invoice-ten.vercel.app/
+```
