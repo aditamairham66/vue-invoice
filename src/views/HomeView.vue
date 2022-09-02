@@ -30,8 +30,14 @@
       </div>
     </div>
 
-    <div>
+    <div v-if="invoiceData.length > 0">
       <HomeInvoiceVue v-for="(row, i) in invoiceData" :invoice="row" :key="i"/>
+    </div>
+
+    <div v-else class="empty flex flex-column ">
+      <img src="@/assets/illustration-empty.svg" alt="">
+      <h3>There is nothing here</h3>
+      <p>Create new invoice by clicking the New Invoice button and get started.</p>
     </div>
 
   </div>
@@ -149,6 +155,29 @@ export default {
           }
         }
       }
+    }
+  }
+
+  .empty {
+    margin-top: 160px;
+    align-items: center;
+
+    img {
+      width: 214px;
+      height: 200px;
+    }
+
+    h3 {
+      font-size: 20px;
+      margin-top: 40px;
+    }
+
+    p {
+      text-align: center;
+      max-width: 224px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 16px;
     }
   }
 }

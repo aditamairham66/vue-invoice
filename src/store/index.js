@@ -9,6 +9,7 @@ export default createStore({
 
     invoiceData: [],
     invoiceLoading: null,
+    invoiceArray: null,
   },
   getters: {
   },
@@ -21,13 +22,20 @@ export default createStore({
       state.modalConfirmAlert = !state.modalConfirmAlert
     },
 
-    mutationGetInvoice(state, payload) {
+    mutationSetInvoice(state, payload) {
       state.invoiceData.push(payload)
     },
 
     mutationSetLoadingInvoice(state) {
       state.invoiceLoading = true
     },
+
+    mutationSetInvoiceArray(state, payload) {
+      state.invoiceArray = state.invoiceData.filter(row => {
+        return row.invoiceId === payload
+      })
+    },
+    
   },
   actions: {
     actionGetInvoiceAll({commit, state}) {
@@ -60,7 +68,7 @@ export default createStore({
               invoicePaid: row.data().invoicePaid,
             } 
 
-            commit('mutationGetInvoice', data)
+            commit('mutationSetInvoice', data)
           }
         })
       )
