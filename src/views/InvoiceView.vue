@@ -15,8 +15,8 @@
         </div>
       </div>
       <div class="right flex">
-        <button class="dark-purple">Edit</button>
-        <button class="red">Delete</button>
+        <button class="dark-purple" @click="updateInvoice">Edit</button>
+        <button class="red" @click="deleteInvoice(detail.docId)">Delete</button>
         <button class="green" v-if="detail.invoicePending">Mark as Paid</button>
         <button class="orange" v-if="detail.invoiceDraft || detail.invoicePaid">Mark as Pending</button>
       </div>
@@ -88,7 +88,7 @@
 </template>
 
 <script>
-import { mapMutations, mapState } from 'vuex';
+import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
 
 export default {
   name: 'InvoiceView',
@@ -101,15 +101,38 @@ export default {
     this.getInvoiceId()
   },
   methods: {
-    ...mapMutations(['mutationSetInvoiceArray']),
+    ...mapMutations(['mutationSetInvoiceArray', 'mutationSetEditInvoice', 'mutationShowModalInvoice']),
+
+    ...mapActions(['actionDeleteInvoice']),
 
     getInvoiceId() {
       this.mutationSetInvoiceArray(this.$route.params.invoiceId)
-      this.detail = this.invoiceArray[0]
+      this.detail = this.invoiceDetail[0]
     },
+
+    updateInvoice() {
+      this.mutationSetEditInvoice()
+      this.mutationShowModalInvoice()
+    },
+
+    async deleteInvoice(docId) {
+      await this.actionDeleteInvoice({
+        docId: docId
+      })
+      this.$router.push({ name: 'home' })
+    },
+
   },
   computed: {
-    ...mapState(['invoiceArray'])
+    ...mapState(['invoiceArray', 'editInvoice']),
+    ...mapGetters(['invoiceDetail'])
+  },
+  watch: {
+    editInvoice() {
+      if (!this.editInvoice) {
+        this.detail = this.invoiceDetail[0]
+      }
+    },
   },
 }
 </script>
@@ -301,7 +324,7 @@ export default {
         flex: 1;
         font-size: 12px;
       }
-      
+
       p:nth-child(2) {
         font-size: 28px;
         text-align: right;

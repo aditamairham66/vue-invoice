@@ -1,6 +1,7 @@
 import { createStore } from 'vuex'
 import { db } from "@/firebase/firebaseSetting";
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
+import createPersistedState from "vuex-persistedstate";
 
 export default createStore({
   state: {
@@ -9,9 +10,14 @@ export default createStore({
 
     invoiceData: [],
     invoiceLoading: null,
-    invoiceArray: null,
+    invoiceArray: [],
+
+    editInvoice: null,
   },
   getters: {
+    invoiceDetail(state) {
+      return state.invoiceArray
+    }
   },
   mutations: {
     mutationShowModalInvoice(state) {
@@ -35,6 +41,14 @@ export default createStore({
         return row.invoiceId === payload
       })
     },
+
+    mutationSetEditInvoice(state) {
+      state.editInvoice = !state.editInvoice
+    },
+
+    mutationDeleteInvoice(state, payload) {
+      state.invoiceData = state.invoiceData.filter(row => row.docId !== payload)
+    },
     
   },
   actions: {
@@ -42,6 +56,7 @@ export default createStore({
       onSnapshot(
         collection(db, "invoices"), (snap) => snap.docs.map((row) => {
           if (!state.invoiceData.some((invoice) => invoice.docId === row.id)) {
+            console.log()
             const data = {
               docId: row.id,
               invoiceId: row.data().invoiceId,
@@ -75,7 +90,31 @@ export default createStore({
 
       commit('mutationSetLoadingInvoice')
     },
+
+    async actionUpdateInvoice({commit, dispatch}, {docId, routeId}) {
+      commit('mutationDeleteInvoice', docId)
+
+      await dispatch('actionGetInvoiceAll')
+
+      commit('mutationSetInvoiceArray', routeId)
+      commit('mutationShowModalInvoice')
+      commit('mutationSetEditInvoice')
+    },
+
+    async actionDeleteInvoice({commit}, {docId}) {
+      await deleteDoc(
+        doc(db, 'invoices', docId)
+      )
+
+      commit('mutationDeleteInvoice', docId)
+    },
+
   },
   modules: {
-  }
+  },
+  plugins: [
+    createPersistedState({
+      storage: window.sessionStorage
+    })
+  ]
 })

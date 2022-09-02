@@ -11,12 +11,12 @@
 </template>
 
 <script>
-import { mapMutations } from 'vuex';
+import { mapMutations, mapState } from 'vuex';
 
 export default {
     name: 'modalConfirmAlert',
     methods: {
-        ...mapMutations(['mutationShowModalConfirmAlert', 'mutationShowModalInvoice']),
+        ...mapMutations(['mutationShowModalConfirmAlert', 'mutationShowModalInvoice', 'mutationSetEditInvoice']),
 
         closeModal() {
             this.mutationShowModalConfirmAlert()
@@ -25,7 +25,14 @@ export default {
         closeInvoice() {
             this.mutationShowModalConfirmAlert()
             this.mutationShowModalInvoice()
+
+            if (this.editInvoice) {
+                this.mutationSetEditInvoice()
+            }
         },
+    },
+    computed: {
+        ...mapState(['editInvoice'])
     }
 }
 </script>

@@ -3,7 +3,8 @@
         <form @submit.prevent="submitForm" class="invoice-content">
             <LoadingVue v-show="loading"/>
 
-            <h1>New Invoice</h1>
+            <h1 v-if="!editInvoice">New Invoice</h1>
+            <h1 v-if="editInvoice">Edit Invoice</h1>
 
             <div class="bill-from flex flex-column">
                 <h4>Bill Form</h4>
@@ -147,10 +148,12 @@
                     <button type="button" class="red" @click="closeModal">Cancel</button>
                 </div>
                 <div class="right flex">
-                    <button type="submit" class="dark-purple" 
+                    <button type="submit" class="dark-purple" v-if="!editInvoice" 
                         @click="saveDraftInvoice">Save Draft</button>
-                    <button type="submit" class="purple" 
+                    <button type="submit" class="purple" v-if="!editInvoice" 
                         @click="saveInvoice">Create Invoice</button>
+                    <button type="submit" class="purple" v-if="editInvoice" 
+                        @click="saveInvoice">Update Invoice</button>
                 </div>
             </div>
 
@@ -159,10 +162,10 @@
 </template>
 
 <script>
-import { mapMutations } from 'vuex';
+import { mapActions, mapMutations, mapState } from 'vuex';
 import { uid } from 'uid';
 import { db } from "@/firebase/firebaseSetting";
-import { addDoc, collection } from '@firebase/firestore';
+import { addDoc, collection, doc, updateDoc } from '@firebase/firestore';
 import LoadingVue from './Loading.vue';
 
 export default {
@@ -178,6 +181,7 @@ export default {
                 day: 'numeric'
             },
             loading: null,
+            docId: null,
             billerStreetAddress: null,
             billerCity: null,
             billerZipCode: null,
@@ -201,7 +205,9 @@ export default {
         }
     },
     methods: {
-        ...mapMutations(['mutationShowModalInvoice', 'mutationShowModalConfirmAlert']),
+        ...mapMutations(['mutationShowModalInvoice', 'mutationShowModalConfirmAlert', 'mutationSetEditInvoice']),
+
+        ...mapActions(['actionUpdateInvoice']),
 
         checkClick(e) {
             if (e.target === this.$refs.modalInvoiceRef) {
@@ -211,6 +217,10 @@ export default {
 
         closeModal() {
             this.mutationShowModalInvoice()
+
+            if (this.editInvoice) {
+                this.mutationSetEditInvoice()
+            }
         },
 
         addProduct() {
@@ -242,7 +252,7 @@ export default {
             })
         },
 
-        async uploadInvoice() {
+        async addInvoice() {
             if (this.invoiceItemList.length <= 0) {
                 this.$swal("Attention", "Product is empty", "warning")
                 return
@@ -287,13 +297,96 @@ export default {
             this.mutationShowModalInvoice()
         },
 
+        async updateInvoice() {
+            if (this.invoiceItemList.length <= 0) {
+                this.$swal("Attention", "Product is empty", "warning")
+                return
+            }
+
+            // show loading
+            this.loading = true
+
+            // sum total price product
+            this.sumTotalAll()
+
+            await updateDoc(
+                doc(db, "invoices", this.docId), 
+                {
+                    billerStreetAddress: this.billerStreetAddress,
+                    billerCity: this.billerCity,
+                    billerZipCode: this.billerZipCode,
+                    billerCountry: this.billerCountry,
+                    clientName: this.clientName,
+                    clientEmail: this.clientEmail,
+                    clientStreetAddress: this.clientStreetAddress,
+                    clientCity: this.clientCity,
+                    clientZipCode: this.clientZipCode,
+                    clientCountry: this.clientCountry,
+                    invoiceDateUnix: this.invoiceDateUnix,
+                    invoiceDate: this.invoiceDate,
+                    paymentTerms: this.paymentTerms,
+                    paymentDueDateUnix: this.paymentDueDateUnix,
+                    paymentDueDate: this.paymentDueDate,
+                    productDescription: this.productDescription,
+                    invoicePending: this.invoicePending,
+                    invoiceDraft: this.invoiceDraft,
+                    invoiceItemList: this.invoiceItemList,
+                    invoiceTotal: this.invoiceTotal,
+                }
+            )
+
+            // hide loading
+            this.loading = false
+
+            this.actionUpdateInvoice({
+                docId: this.docId,
+                routeId: this.$route.params.invoiceId,
+            })
+        },
+
         submitForm() {
-            this.uploadInvoice()
+            if (this.editInvoice) {
+                this.updateInvoice()
+                return
+            }
+
+            this.addInvoice()
         },
     },
     created() {
-        this.invoiceDateUnix = Date.now()
-        this.invoiceDate = new Date(this.invoiceDateUnix).toLocaleDateString('en-US', this.OptionDate)
+        if (!this.editInvoice) {
+            this.invoiceDateUnix = Date.now()
+            this.invoiceDate = new Date(this.invoiceDateUnix).toLocaleDateString('en-US', this.OptionDate)
+        }
+
+        if (this.editInvoice) {
+            const data = this.invoiceArray[0]
+            this.docId = data.docId
+            this.invoiceId = data.invoiceId
+            this.billerStreetAddress = data.billerStreetAddress
+            this.billerCity = data.billerCity
+            this.billerZipCode = data.billerZipCode
+            this.billerCountry = data.billerCountry
+            this.clientName = data.clientName
+            this.clientEmail = data.clientEmail
+            this.clientStreetAddress = data.clientStreetAddress
+            this.clientCity = data.clientCity
+            this.clientZipCode = data.clientZipCode
+            this.clientCountry = data.clientCountry
+            this.invoiceDateUnix = data.invoiceDateUnix
+            this.invoiceDate = data.invoiceDate
+            this.paymentTerms = data.paymentTerms
+            this.paymentDueDateUnix = data.paymentDueDateUnix
+            this.paymentDueDate = data.paymentDueDate
+            this.productDescription = data.productDescription
+            this.invoicePending = data.invoicePending
+            this.invoiceDraft = data.invoiceDraft
+            this.invoiceItemList = data.invoiceItemList
+            this.invoiceTotal = data.invoiceTotal
+        }
+    },
+    computed: {
+        ...mapState(['editInvoice', 'invoiceArray'])
     },
     watch: {
         paymentTerms() {
